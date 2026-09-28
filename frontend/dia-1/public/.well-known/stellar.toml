@@ -1,0 +1,18 @@
+# SEP-1 template: complete these fields for your RWA Launchpad asset identity.
+# Publish this file on your domain (e.g. https://yourdomain.com/.well-known/stellar.toml)
+
+VERSION = "1.0.0"
+NETWORK_PASSPHRASE = "Test SDF Network ; September 2015"
+
+[[CURRENCIES]]
+code = "OPPIARWA"
+issuer = "GBA7WMQBZ7WYEDZN3CUZVLVFHCJWI245AKVHOYHWAPRAYC5SBFQLKO6J"
+status = "live"
+display_decimals = 2
+name = "Oppia RWA Launchpad Demo Token"
+desc = "Example tokenized real-world asset used to demo the Día 1 initialize flow of the RWA Launchpad contract."
+conditions = "Demo asset for the Oppia Stellar Bolivia bootcamp only. Not backed by any real-world asset."
+
+[DOCUMENTATION]
+ORG_NAME = "Oppia Software Labs"
+ORG_OFFICIAL_EMAIL = "info@oppiasoftwarelabs.com"
