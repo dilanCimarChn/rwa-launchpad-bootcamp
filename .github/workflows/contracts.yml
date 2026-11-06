@@ -1,0 +1,32 @@
+name: Contract regression checks
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  delivery:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        crate: [dia-1, dia-3]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo test --locked --manifest-path ${{ matrix.crate }}/Cargo.toml
+  teaching-exercise:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Exercise tests other than the intentionally broken authorization
+        run: cargo test --locked --manifest-path dia-2/Cargo.toml -- --skip test_set_whitelist_requires_admin
+      - name: Check that the educational regression exposes the known bug
+        shell: bash
+        run: |
+          set +e
+          cargo test --locked --manifest-path dia-2/Cargo.toml test_set_whitelist_requires_admin > day2-exercise.log 2>&1
+          result=$?
+          set -e
+          cat day2-exercise.log
+          test "$result" -ne 0
+          grep 'test_set_whitelist_requires_admin.*FAILED' day2-exercise.log
+          grep 'test did not panic as expected' day2-exercise.log

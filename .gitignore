@@ -1,4 +1,11 @@
 /target
 **/target
 Cargo.lock
+!dia-1/Cargo.lock
+!dia-2/Cargo.lock
+!dia-3/Cargo.lock
 .DS_Store
+
+
+# Next.js generated artifacts
+**/.next/
