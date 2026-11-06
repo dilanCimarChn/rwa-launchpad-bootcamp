@@ -47,3 +47,10 @@ Implement the rule in `check_variation_gate` (Día 2). Día 3's `invest()` calls
 
 1. Working contract on testnet (from `dia-3/`)
 2. Three-minute demo — follow [`dia-3/DEMO.md`](dia-3/DEMO.md)
+
+
+## Estado de la entrega y seguridad
+
+La base del bootcamp y los ejercicios educativos se distinguen de la solución del día 3. Día 2 contiene deliberadamente un fallo de autorización en `set_whitelist`; no es un contrato para desplegar con fondos reales. Ver [instrucciones de día 2](dia-2/README.md).
+
+La entrega de día 3 añade una inversión mínima. Este lote propone verificar el administrador almacenado y rechazar pagos con residuo respecto del precio por unidad; requiere ejecutar `cargo test` antes de considerarse validado. No se ha desplegado ni auditado para fondos reales.

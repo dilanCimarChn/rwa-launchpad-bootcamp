@@ -120,3 +120,8 @@ Con el contrato ya inicializado, `./scripts/demo.sh` corre el intento fallido y 
 de corrido e imprime el link de stellar.expert. Cada corrida genera una transaccion nueva.
 
 Entorno: Rust 1.98.1 con target `wasm32v1-none`, Stellar CLI 28.0.0, `soroban-sdk` 26.
+
+
+## Política de importes y autorización de la revisión local
+
+Las operaciones administrativas deben exigir firma de la dirección almacenada como administrador, no solo de una dirección recibida como parámetro. Los pagos que no sean múltiplos exactos de `price_per_unit` se rechazan antes de transferir tokens. Las regresiones prueban rechazo sin cambios de saldo. La suite local `cargo test` pasó con ocho pruebas, incluidas las nuevas regresiones. Esto no constituye un despliegue ni una auditoría y no valida una red real.
