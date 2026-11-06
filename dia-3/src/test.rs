@@ -121,3 +121,51 @@ fn test_invest_not_whitelisted() {
     env.mock_all_auths();
     client.invest(&investor, &500);
 }
+
+#[test]
+fn test_authenticated_outsider_cannot_administer() {
+    let env = Env::default();
+    let (_admin, payment_token, contract, client) = setup_with_payment_token(&env);
+    let outsider = Address::generate(&env);
+    let investor = Address::generate(&env);
+    // Even with all signatures accepted, the outsider must not have the stored role.
+    assert!(client.try_mint(&outsider, &investor, &5).is_err());
+    assert!(client.try_set_whitelist(&outsider, &investor, &true).is_err());
+    assert!(client.try_pause(&outsider).is_err());
+    assert!(client.try_unpause(&outsider).is_err());
+    assert!(client.try_withdraw(&outsider, &investor, &1).is_err());
+    assert_eq!(client.balance(&investor), 0);
+    assert_eq!(TokenClient::new(&env, &payment_token).balance(&contract), 0);
+    env.as_contract(&contract, || {
+        let info: AssetInfo = env.storage().instance().get(&DataKey::AssetInfo).unwrap();
+        assert!(!info.paused);
+        let approved: bool = env.storage().persistent().get(&DataKey::Whitelisted(investor)).unwrap_or(false);
+        assert!(!approved);
+    });
+}
+
+#[test]
+fn test_stored_admin_still_requires_authentication() {
+    let env = Env::default();
+    let (admin, _token, contract, client) = setup_with_payment_token(&env);
+    env.mock_auths(&[]);
+    assert!(client.try_pause(&admin).is_err());
+    env.as_contract(&contract, || {
+        let info: AssetInfo = env.storage().instance().get(&DataKey::AssetInfo).unwrap();
+        assert!(!info.paused);
+    });
+}
+
+#[test]
+fn test_non_divisible_payment_has_no_effect() {
+    let env = Env::default();
+    let (admin, payment, contract, client) = setup_with_payment_token(&env);
+    let investor = Address::generate(&env);
+    StellarAssetClient::new(&env, &payment).mint(&investor, &1000);
+    client.set_whitelist(&admin, &investor, &true);
+    assert!(client.try_invest(&investor, &550).is_err());
+    assert_eq!(client.balance(&investor), 0);
+    let token = TokenClient::new(&env, &payment);
+    assert_eq!(token.balance(&investor), 1000);
+    assert_eq!(token.balance(&contract), 0);
+}

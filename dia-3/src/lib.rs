@@ -33,6 +33,8 @@ pub enum Error {
     NotWhitelisted = 5,
     Paused = 6,
     AmountTooLow = 7,
+    Unauthorized = 8,
+    NonDivisiblePayment = 9,
 }
 
 /// Variación del equipo: mínimo de inversión, en unidades del token de pago.
@@ -42,6 +44,14 @@ const MIN_INVESTMENT: i128 = 500;
 pub struct RwaLaunchpad;
 
 impl RwaLaunchpad {
+    fn require_admin(env: &Env, candidate: &Address) {
+        let stored: Address = env.storage().instance().get(&DataKey::Admin)
+            .unwrap_or_else(|| panic_with_error!(env, Error::NotInitialized));
+        if stored != *candidate {
+            panic_with_error!(env, Error::Unauthorized);
+        }
+        stored.require_auth();
+    }
     fn require_initialized(env: &Env) {
         if !env.storage().instance().has(&DataKey::Admin) {
             panic_with_error!(env, Error::NotInitialized);
@@ -116,7 +126,7 @@ impl RwaLaunchpad {
 
     pub fn mint(env: Env, admin: Address, to: Address, amount: i128) {
         Self::require_initialized(&env);
-        admin.require_auth();
+        Self::require_admin(&env, &admin);
         Self::require_not_paused(&env);
         if amount <= 0 {
             panic_with_error!(&env, Error::InvalidAmount);
@@ -149,7 +159,7 @@ impl RwaLaunchpad {
 
     pub fn set_whitelist(env: Env, admin: Address, investor: Address, approved: bool) {
         Self::require_initialized(&env);
-        admin.require_auth();
+        Self::require_admin(&env, &admin);
         env.storage()
             .persistent()
             .set(&DataKey::Whitelisted(investor), &approved);
@@ -157,7 +167,7 @@ impl RwaLaunchpad {
 
     pub fn pause(env: Env, admin: Address) {
         Self::require_initialized(&env);
-        admin.require_auth();
+        Self::require_admin(&env, &admin);
         let mut asset: AssetInfo = env
             .storage()
             .instance()
@@ -169,7 +179,7 @@ impl RwaLaunchpad {
 
     pub fn unpause(env: Env, admin: Address) {
         Self::require_initialized(&env);
-        admin.require_auth();
+        Self::require_admin(&env, &admin);
         let mut asset: AssetInfo = env
             .storage()
             .instance()
@@ -204,6 +214,9 @@ impl RwaLaunchpad {
         }
 
         let rwa_amount = payment_amount / asset.price_per_unit;
+        if payment_amount % asset.price_per_unit != 0 {
+            panic_with_error!(&env, Error::NonDivisiblePayment);
+        }
         if rwa_amount <= 0 {
             panic_with_error!(&env, Error::InvalidAmount);
         }
@@ -226,7 +239,7 @@ impl RwaLaunchpad {
 
     pub fn withdraw(env: Env, admin: Address, to: Address, amount: i128) {
         Self::require_initialized(&env);
-        admin.require_auth();
+        Self::require_admin(&env, &admin);
         if amount <= 0 {
             panic_with_error!(&env, Error::InvalidAmount);
         }
